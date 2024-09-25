@@ -60,7 +60,7 @@
                         <!-- Step 1: Basic Information -->
                         <div v-if="currentStep === 1">
                             <h2>{{ isEdit ? 'Edit Product' : 'Create Product' }}</h2>
-                            <form @submit.prevent="isEdit ? validateEditStep1 : validateStep1">
+                            <form @submit.prevent="validateStep1">
                                 <div>
                                     <label for="name">Name</label>
                                     <input v-model="formData.name" type="text" id="name" required />
@@ -83,7 +83,7 @@
                         <!-- Step 2: Image Upload -->
                         <div v-if="currentStep === 2">
                             <h2>Step 2: Upload Images</h2>
-                            <form @submit.prevent="isEdit ? validateEditStep2 : validateStep2">
+                            <form @submit.prevent="validateStep2">
                                 <input type="file" @change="handleImageUpload" multiple accept="image/*" />
                                 <p>Selected images: {{ formData.images.length }}</p>
                                 <button type="submit">Next</button>
@@ -93,9 +93,9 @@
                         <!-- Step 3: Set Date -->
                         <div v-if="currentStep === 3">
                             <h2>Step 3: Set Date</h2>
-                            <input type="datetime-local" v-model="formData.date" required />
+                            <input type="datetime-local" v-model="formData.date_time" required />
                             <button @click="setToday">Today</button>
-                            <button @click="isEdit ? updateProduct : submitProduct">{{ isEdit ? 'Update' : 'Submit' }}</button>
+                            <button @click="submitProduct">{{ isEdit ? 'Update' : 'Submit' }}</button>
                         </div>
                     </div>
                 </div>
@@ -114,14 +114,14 @@ export default {
             showEditModal: false,
             isEdit: false, // To differentiate between edit and create mode
             currentStep: 1,
-            categories: ['Category 1', 'Category 2', 'Category 3'], // Example categories
+            categories: ['Kitchen', 'Electronics', 'Apparel'], // Example categories
             formData: {
                 id: null, // Holds the product id during edit
                 name: '',
                 category: '',
                 description: '',
                 images: [],
-                date: '',
+                date_time: '', // Changed from `date` to `date_time`
             },
             errors: [],
             loading: false,
@@ -145,7 +145,7 @@ export default {
                 this.formData.name = product.name;
                 this.formData.category = product.category;
                 this.formData.description = product.description;
-                this.formData.date = product.date; // Assuming the date field exists
+                this.formData.date_time = product.date_time; // Changed from `date` to `date_time`
                 
                 this.showEditModal = true;
             } catch (error) {
@@ -165,18 +165,24 @@ export default {
                 category: '',
                 description: '',
                 images: [],
-                date: '',
+                date_time: '', // Changed from `date` to `date_time`
             };
         },
         validateStep1() {
+            // Step 1: Basic validation (works for both Create and Edit)
             if (this.formData.name && this.formData.category && this.formData.description) {
-                this.currentStep = 2;
+                this.currentStep = 2; // Move to Step 2
             } else {
                 alert('Please fill all fields.');
             }
         },
-        validateEditStep1() {
-            this.validateStep1();
+        validateStep2() {
+            // Step 2: Image validation (works for both Create and Edit)
+            if (this.formData.images.length < 1 || this.formData.images.length > 4) {
+                alert('You must upload between 1 and 4 images.');
+            } else {
+                this.currentStep = 3; // Move to Step 3
+            }
         },
         handleImageUpload(event) {
             const files = event.target.files;
@@ -186,64 +192,67 @@ export default {
             }
             this.formData.images = [...files];
         },
-        validateStep2() {
-            if (this.formData.images.length < 1 || this.formData.images.length > 4) {
-                alert('You must upload between 1 and 4 images.');
-            } else {
-                this.currentStep = 3;
-            }
-        },
-        validateEditStep2() {
-            this.validateStep2();
-        },
         setToday() {
             const now = new Date().toISOString().slice(0, 16); // Format for datetime-local input
-            this.formData.date = now;
+            this.formData.date_time = now; // Changed from `date` to `date_time`
         },
         async submitProduct() {
-            if (!this.formData.date) {
+            // Submit or Update the product
+            if (!this.formData.date_time) { // Changed from `date` to `date_time`
                 alert('Please set a valid date.');
                 return;
             }
-            // Simulating API call to save the product
-            await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
-            alert('Product created successfully!');
 
-            // Close the modal
-            this.closeModal();
-
-            // Refresh the product list after submission
-            this.fetchProducts();
-        },
-        async updateProduct() {
-            if (!this.formData.date) {
-                alert('Please set a valid date.');
-                return;
-            }
-            try {
-                // Submit the updated product data to the backend
-                const response = await fetch(`/api/products/${this.formData.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        name: this.formData.name,
-                        category: this.formData.category,
-                        description: this.formData.description,
-                        date: this.formData.date,
-                    }),
-                });
-                
-                if (response.ok) {
-                    alert('Product updated successfully!');
-                    this.closeModal();
-                    this.fetchProducts(); // Refresh product list
-                } else {
-                    alert('Failed to update product.');
+            if (this.isEdit) {
+                // Update existing product
+                try {
+                    const response = await fetch(`/api/products/${this.formData.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: this.formData.name,
+                            category: this.formData.category,
+                            description: this.formData.description,
+                            date_time: this.formData.date_time, // Changed from `date` to `date_time`
+                        }),
+                    });
+                    if (response.ok) {
+                        alert('Product updated successfully!');
+                        this.closeModal();
+                        this.fetchProducts(); // Refresh product list
+                    } else {
+                        alert('Failed to update product.');
+                    }
+                } catch (error) {
+                    console.error('Error updating product:', error);
                 }
-            } catch (error) {
-                console.error('Error updating product:', error);
+            } else {
+                // Create new product
+                try {
+                    const response = await fetch('/api/products', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: this.formData.name,
+                            category: this.formData.category,
+                            description: this.formData.description,
+                            date_time: this.formData.date_time, // Changed from `date` to `date_time`
+                        }),
+                    });
+                    if (response.ok) {
+                        alert('Product created successfully!');
+                        this.closeModal();
+                        this.fetchProducts(); // Refresh product list
+                    } else {
+                        alert('Failed to create product.');
+                    }
+                } catch (error) {
+                    console.error('Error creating product:', error);
+                }
             }
         },
         async fetchProducts(url = '/api/products') {
