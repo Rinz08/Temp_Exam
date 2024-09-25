@@ -21,4 +21,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::get('/products', [ProductController::class, 'index']);  // Fetch products with search, filter, and pagination
+Route::post('/products', [ProductController::class, 'store']); // For creating products
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);  // Delete a product by ID

@@ -24,7 +24,7 @@ class AuthenticatedSessionController extends Controller
      * Handle an incoming authentication request.
      */
     public function store(Request $request)
-{
+    {
     $request->validate([
         'login' => 'required|string',
         'password' => 'required|string',
@@ -34,15 +34,22 @@ class AuthenticatedSessionController extends Controller
     $fieldType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
     // Attempt login using either email or username
-    if (Auth::attempt([$fieldType => $request->login, 'password' => $request->password], $request->boolean('remember'))) {
+    if (Auth::attempt([$fieldType => $request->login, 'password' => $request->password], $request->filled('remember'))) {
         $request->session()->regenerate();
-
-        return redirect()->intended('/dashboard');
+        return redirect()->intended(RouteServiceProvider::HOME);
     }
 
-    return back()->withErrors([
-        'login' => 'The provided credentials do not match our records.',
-    ])->onlyInput('login');
+    // Return success JSON response for Vue.js
+    return response()->json([
+        'success' => true,
+        'user' => Auth::user()
+    ]);
+
+    // Return failure JSON response
+    return response()->json([
+        'success' => false,
+        'message' => 'The provided credentials do not match our records.'
+    ], 401);
 }
 
     /**

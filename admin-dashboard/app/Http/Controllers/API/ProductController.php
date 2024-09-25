@@ -38,6 +38,29 @@ class ProductController extends Controller
         return response()->json($products);
     }
 
+    public function store(Request $request)
+    {
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'category' => 'required|string',
+        'description' => 'required|string',
+        'dateTime' => 'required|date',
+        'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+    ]);
+
+    $product = new Product($request->except(['images']));
+    $product->save();
+
+    if ($request->hasfile('images')) {
+        foreach ($request->file('images') as $image) {
+            $path = $image->store('public/products');
+            // Save each image path to your product_images table or related model
+        }
+    }
+
+        return response()->json(['message' => 'Product created successfully', 'product' => $product], 201);
+    }
+
     public function destroy($id)
     {
         // Find and delete the product
