@@ -51,7 +51,7 @@
 </template>
 
 <script>
-import axios from 'axios'; // Import axios for API requests
+import axios from 'axios'; 
 
 export default {
   data() {
@@ -61,7 +61,7 @@ export default {
         password: '',
         remember: false
       },
-      errorMessage: '' // Add an error message state
+      errorMessage: '' 
     };
   },
   methods: {
@@ -82,7 +82,7 @@ export default {
         }
       } catch (error) {
         console.error("Login error:", error);
-        // Set error message based on the error response
+        
         if (error.response) {
           this.errorMessage = error.response.data.message || 'An error occurred';
         } else {
@@ -96,5 +96,5 @@ export default {
 
 
 <style scoped>
-/* No additional styles are needed as Tailwind handles all */
+
 </style>

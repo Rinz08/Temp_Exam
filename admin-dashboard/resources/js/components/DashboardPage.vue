@@ -4,21 +4,28 @@
 
         <div class="flex-1 flex ">
             <!-- Sidebar -->
-            <div class="w-64 bg-[#343A40] text-[#BEC3CC] shadow-md ">
-                <div class="p-4 text-lg font-semibold">Sample Company</div>
-                <hr>
-                <div class="p-4 text-base font-semibold">
-                    <p>Admin User</p>
+            <div class="w-64 bg-[#343A40] text-[#BEC3CC] shadow-md flex flex-col justify-between">
+                <div>
+                    <div class="p-4 text-lg font-semibold">Sample Company</div>
+                    <hr>
+                    <div class="p-4 text-base font-semibold">
+                        <p>Admin User</p>
+                    </div>
+                    <hr>
+                    <nav class="mt-4">
+                        <ul>
+                            <li class="py-2 px-4 hover:bg-gray-200 cursor-pointer" @click="openCreateModal">Add a Product</li> <!-- Add a Product Button -->
+                            <li class="py-2 px-4 hover:bg-gray-200"><a href="#">Dashboard</a></li>
+                            <li class="py-2 px-4 hover:bg-gray-200"><a href="#">Layout Options</a></li>
+                            <li class="py-2 px-4 hover:bg-gray-200"><a href="#">Charts</a></li>
+                        </ul>
+                    </nav>
                 </div>
-                <hr>
-                <nav class="mt-4">
-                    <ul>
-                        <li class="py-2 px-4 hover:bg-gray-200"><a href="#">Dashboard</a></li>
-                        <li class="py-2 px-4 hover:bg-gray-200 cursor-pointer" @click="openCreateModal">Add a Product</li> <!-- Updated Sidebar Item -->
-                        <li class="py-2 px-4 hover:bg-gray-200"><a href="#">Layout Options</a></li>
-                        <li class="py-2 px-4 hover:bg-gray-200"><a href="#">Charts</a></li>
-                    </ul>
-                </nav>
+
+                <!-- Logout Button at the Bottom -->
+                <div class="p-4">
+                    <button @click="logout" class="logout-button">Logout</button>
+                </div>
             </div>
 
             <main class="flex-1 p-6">
@@ -113,40 +120,38 @@ export default {
         return {
             showCreateModal: false,
             showEditModal: false,
-            isEdit: false, // To differentiate between edit and create mode
+            isEdit: false, 
             currentStep: 1,
-            categories: ['Category 1', 'Category 2', 'Category 3'], // Example categories
+            categories: ['Category 1', 'Category 2', 'Category 3'], 
             formData: {
-                id: null, // Holds the product id during edit
+                id: null, 
                 name: '',
                 category: '',
                 description: '',
                 images: [],
-                date_time: '', // Changed from `date` to `date_time`
+                date_time: '', 
             },
             errors: [],
             loading: false,
-            products: [], // Data for the product list
+            products: [], 
         };
     },
     methods: {
         openCreateModal() {
-            this.isEdit = false; // Set to create mode
+            this.isEdit = false;
             this.showCreateModal = true;
         },
         async editProduct(productId) {
             this.isEdit = true;
             try {
-                // Fetch the product data for editing
                 const response = await fetch(`/api/products/${productId}`);
                 const product = await response.json();
                 
-                // Pre-fill the form with the fetched product data
                 this.formData.id = product.id;
                 this.formData.name = product.name;
                 this.formData.category = product.category;
                 this.formData.description = product.description;
-                this.formData.date_time = product.date_time; // Changed from `date` to `date_time`
+                this.formData.date_time = product.date_time; 
                 
                 this.showEditModal = true;
             } catch (error) {
@@ -166,7 +171,7 @@ export default {
                 category: '',
                 description: '',
                 images: [],
-                date_time: '', // Changed from `date` to `date_time`
+                date_time: '', 
             };
         },
         validateStep1() {
@@ -194,12 +199,12 @@ export default {
             this.formData.images = [...files];
         },
         setToday() {
-            const now = new Date().toISOString().slice(0, 16); // Format for datetime-local input
-            this.formData.date_time = now; // Changed from `date` to `date_time`
+            const now = new Date().toISOString().slice(0, 16); 
+            this.formData.date_time = now; 
         },
         async submitProduct() {
             // Submit or Update the product
-            if (!this.formData.date_time) { // Changed from `date` to `date_time`
+            if (!this.formData.date_time) { 
                 alert('Please set a valid date.');
                 return;
             }
@@ -216,13 +221,13 @@ export default {
                             name: this.formData.name,
                             category: this.formData.category,
                             description: this.formData.description,
-                            date_time: this.formData.date_time, // Changed from `date` to `date_time`
+                            date_time: this.formData.date_time, 
                         }),
                     });
                     if (response.ok) {
                         alert('Product updated successfully!');
                         this.closeModal();
-                        this.fetchProducts(); // Refresh product list
+                        this.fetchProducts(); 
                     } else {
                         alert('Failed to update product.');
                     }
@@ -241,13 +246,13 @@ export default {
                             name: this.formData.name,
                             category: this.formData.category,
                             description: this.formData.description,
-                            date_time: this.formData.date_time, // Changed from `date` to `date_time`
+                            date_time: this.formData.date_time, 
                         }),
                     });
                     if (response.ok) {
                         alert('Product created successfully!');
                         this.closeModal();
-                        this.fetchProducts(); // Refresh product list
+                        this.fetchProducts(); 
                     } else {
                         alert('Failed to create product.');
                     }
@@ -265,12 +270,18 @@ export default {
         async deleteProduct(productId) {
             if (confirm('Are you sure you want to delete this product?')) {
                 await fetch(`/api/products/${productId}`, { method: 'DELETE' });
-                this.fetchProducts(); // Refresh product list after deletion
+                this.fetchProducts(); 
             }
+        },
+        // Logout functionality
+        logout() {
+            // Clear any session data if needed
+            // Redirect to login page
+            this.$router.push('/'); 
         }
     },
     mounted() {
-        this.fetchProducts(); // Fetch initial products when the component is mounted
+        this.fetchProducts(); 
     }
 };
 </script>
@@ -395,6 +406,23 @@ export default {
     color: black;
     text-decoration: none;
     cursor: pointer;
+}
+
+/* Logout button styling */
+.logout-button {
+    background-color: #000000;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+.logout-button:hover {
+    background-color: #333333;
 }
 
 /* Loader */
