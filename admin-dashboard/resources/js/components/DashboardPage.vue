@@ -4,10 +4,10 @@
 
         <div class="flex-1 flex ">
             <div class="w-64 bg-[#343A40] text-[#BEC3CC] shadow-md ">
-                <div class="p-4 text-lg font-semibold">AdminLT3</div>
+                <div class="p-4 text-lg font-semibold">Sample Company</div>
                 <hr>
                 <div class="p-4 text-base font-semibold">
-                    <p>Alexander Pierce</p>
+                    <p>Admin User</p>
                 </div>
                 <hr>
                 <nav class="mt-4">
@@ -22,7 +22,7 @@
 
             <main class="flex-1 p-6">
                 <h2 class="text-2xl font-bold">Dashboard</h2>
-                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div class="bg-white p-4 rounded shadow">
                         <h3 class="font-semibold">Card 1</h3>
                         <p>Some content goes here.</p>
@@ -35,8 +35,42 @@
                         <h3 class="font-semibold">Card 3</h3>
                         <p>Some content goes here.</p>
                     </div>
+                </div> -->
+
+                <!-- Main content area for product listing -->
+                <div class="content">
+                    <div class="header">
+                        <h2>Product List</h2>
+                        <!-- Search bar -->
+                        <input v-model="searchKeyword" @input="searchProducts" class="search-input"
+                            placeholder="Search by name or description" />
+                    </div>
+
+                    <!-- Product list with pagination -->
+                    <div class="product-list">
+                        <div v-if="loading" class="loading">Loading products...</div>
+                        <div v-else>
+                            <div v-for="product in products.data" :key="product.id" class="product-item">
+                                <div class="product-info">
+                                    <h3>{{ product.name }}</h3>
+                                    <p>{{ product.description }}</p>
+                                </div>
+                                <button @click="deleteProduct(product.id)" class="delete-button">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination controls -->
+                    <div class="pagination-controls" v-if="products.data && products.data.length">
+                        <button @click="fetchProducts(products.prev_page_url)" :disabled="!products.prev_page_url"
+                            class="pagination-button">Previous</button>
+                        <button @click="fetchProducts(products.next_page_url)" :disabled="!products.next_page_url"
+                            class="pagination-button">Next</button>
+                    </div>
                 </div>
             </main>
+
+
         </div>
 
         <FooterNav />
@@ -44,17 +78,108 @@
 </template>
 
 <script>
-// import HeaderNav from './HeaderNav.vue'
-// import FooterNav from './FooterNav.vue'
-
 export default {
-    components: {
-        // HeaderNav,
-        // FooterNav,
+    data() {
+        return {
+            products: [],
+            categories: ['Category 1', 'Category 2', 'Category 3'], // Example categories
+            searchKeyword: '',
+            selectedCategory: '',
+            loading: false,
+        };
     },
+    methods: {
+        async fetchProducts(url = '/api/products') {
+            this.loading = true;
+            const response = await fetch(`${url}?search=${this.searchKeyword}&category=${this.selectedCategory}`);
+            this.products = await response.json();
+            this.loading = false;
+        },
+        searchProducts() {
+            this.fetchProducts();
+        },
+        filterByCategory(category) {
+            this.selectedCategory = category === 'all' ? '' : category;
+            this.fetchProducts();
+        },
+        async deleteProduct(productId) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                await fetch(`/api/products/${productId}`, { method: 'DELETE' });
+                this.fetchProducts(); // Refresh product list after deletion
+            }
+        }
+    },
+    mounted() {
+        this.fetchProducts(); // Fetch initial products when the component is mounted
+    }
 };
 </script>
-
 <style scoped>
 /* You can add additional styles here */
+
+.category-list li.active,
+.category-list li:hover {
+    background-color: #1abc9c;
+}
+
+
+/* Product list styling */
+.product-list {
+    margin-top: 20px;
+}
+
+.product-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.product-info h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.delete-button {
+    padding: 8px 12px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.delete-button:hover {
+    background-color: #c0392b;
+}
+
+/* Pagination styling */
+.pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.pagination-button {
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pagination-button:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+/* Loader */
+.loading {
+    text-align: center;
+    margin-top: 20px;
+}
 </style>
