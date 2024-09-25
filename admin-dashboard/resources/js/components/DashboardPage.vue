@@ -3,6 +3,7 @@
         <HeaderNav />
 
         <div class="flex-1 flex ">
+            <!-- Sidebar -->
             <div class="w-64 bg-[#343A40] text-[#BEC3CC] shadow-md ">
                 <div class="p-4 text-lg font-semibold">Sample Company</div>
                 <hr>
@@ -13,7 +14,7 @@
                 <nav class="mt-4">
                     <ul>
                         <li class="py-2 px-4 hover:bg-gray-200"><a href="#">Dashboard</a></li>
-                        <li class="py-2 px-4 hover:bg-gray-200"><a href="#">Widgets</a></li>
+                        <li class="py-2 px-4 hover:bg-gray-200 cursor-pointer" @click="openCreateModal">Add a Product</li> <!-- Updated Sidebar Item -->
                         <li class="py-2 px-4 hover:bg-gray-200"><a href="#">Layout Options</a></li>
                         <li class="py-2 px-4 hover:bg-gray-200"><a href="#">Charts</a></li>
                     </ul>
@@ -114,7 +115,7 @@ export default {
             showEditModal: false,
             isEdit: false, // To differentiate between edit and create mode
             currentStep: 1,
-            categories: ['Kitchen', 'Electronics', 'Apparel'], // Example categories
+            categories: ['Category 1', 'Category 2', 'Category 3'], // Example categories
             formData: {
                 id: null, // Holds the product id during edit
                 name: '',
@@ -302,6 +303,11 @@ export default {
 
 .edit-button:hover {
     background-color: #e67e22;
+}
+
+/* Sidebar item styling */
+.nav a, .nav li {
+    cursor: pointer;
 }
 
 /* Product list styling */
