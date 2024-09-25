@@ -24,26 +24,23 @@ class AuthenticatedSessionController extends Controller
      * Handle an incoming authentication request.
      */
     public function store(Request $request)
-{
-    $request->validate([
-        'login' => 'required|string',
-        'password' => 'required|string',
-    ]);
-
-    // Determine if login is an email or username
-    $fieldType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-
-    // Attempt login using either email or username
-    if (Auth::attempt([$fieldType => $request->login, 'password' => $request->password], $request->boolean('remember'))) {
-        $request->session()->regenerate();
-
-        return redirect()->intended('/dashboard');
+    {
+        $request->validate([
+            'email' => 'required|string|email', // Ensures the email format is valid
+            'password' => 'required|string',
+        ]);
+    
+        // Attempt login using email
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password], $request->boolean('remember'))) {
+            $request->session()->regenerate();
+    
+            return response()->json(['success' => true, 'message' => 'Login successful.']);
+        }
+    
+        // If login fails, return an error response
+        return response()->json(['success' => false, 'message' => 'The provided credentials do not match our records.'], 401);
     }
-
-    return back()->withErrors([
-        'login' => 'The provided credentials do not match our records.',
-    ])->onlyInput('login');
-}
+    
 
     /**
      * Destroy an authenticated session.
