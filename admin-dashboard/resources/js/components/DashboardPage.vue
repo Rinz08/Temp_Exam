@@ -21,32 +21,20 @@
             </div>
 
             <main class="flex-1 p-6">
-                <h2 class="text-2xl font-bold">Dashboard</h2>
-                <!-- <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div class="bg-white p-4 rounded shadow">
-                        <h3 class="font-semibold">Card 1</h3>
-                        <p>Some content goes here.</p>
-                    </div>
-                    <div class="bg-white p-4 rounded shadow">
-                        <h3 class="font-semibold">Card 2</h3>
-                        <p>Some content goes here.</p>
-                    </div>
-                    <div class="bg-white p-4 rounded shadow">
-                        <h3 class="font-semibold">Card 3</h3>
-                        <p>Some content goes here.</p>
-                    </div>
-                </div> -->
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">Product List</h2>
+                    <!-- Create Product Button -->
+                    <button @click="createProduct" class="create-button">Create Product</button>
+                </div>
 
-                <!-- Main content area for product listing -->
+                <!-- Search bar -->
+                <div class="mt-4">
+                    <input v-model="searchKeyword" @input="searchProducts" class="search-input"
+                        placeholder="Search by name or description" />
+                </div>
+
+                <!-- Product list with pagination -->
                 <div class="content">
-                    <div class="header">
-                        <h2>Product List</h2>
-                        <!-- Search bar -->
-                        <input v-model="searchKeyword" @input="searchProducts" class="search-input"
-                            placeholder="Search by name or description" />
-                    </div>
-
-                    <!-- Product list with pagination -->
                     <div class="product-list">
                         <div v-if="loading" class="loading">Loading products...</div>
                         <div v-else>
@@ -69,8 +57,6 @@
                     </div>
                 </div>
             </main>
-
-
         </div>
 
         <FooterNav />
@@ -82,24 +68,18 @@ export default {
     data() {
         return {
             products: [],
-            categories: ['Category 1', 'Category 2', 'Category 3'], // Example categories
             searchKeyword: '',
-            selectedCategory: '',
             loading: false,
         };
     },
     methods: {
         async fetchProducts(url = '/api/products') {
             this.loading = true;
-            const response = await fetch(`${url}?search=${this.searchKeyword}&category=${this.selectedCategory}`);
+            const response = await fetch(`${url}?search=${this.searchKeyword}`);
             this.products = await response.json();
             this.loading = false;
         },
         searchProducts() {
-            this.fetchProducts();
-        },
-        filterByCategory(category) {
-            this.selectedCategory = category === 'all' ? '' : category;
             this.fetchProducts();
         },
         async deleteProduct(productId) {
@@ -107,6 +87,10 @@ export default {
                 await fetch(`/api/products/${productId}`, { method: 'DELETE' });
                 this.fetchProducts(); // Refresh product list after deletion
             }
+        },
+        createProduct() {
+            // Handle the create product action, for example:
+            alert("Redirecting to create product form...");
         }
     },
     mounted() {
@@ -114,6 +98,7 @@ export default {
     }
 };
 </script>
+
 <style scoped>
 /* You can add additional styles here */
 
@@ -122,6 +107,20 @@ export default {
     background-color: #1abc9c;
 }
 
+/* Create Product button styling */
+.create-button {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.create-button:hover {
+    background-color: #2980b9;
+}
 
 /* Product list styling */
 .product-list {
