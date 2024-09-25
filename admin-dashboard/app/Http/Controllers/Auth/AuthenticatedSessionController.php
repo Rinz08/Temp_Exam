@@ -26,7 +26,7 @@ class AuthenticatedSessionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'email' => 'required|string|email', // Ensures the email format is valid
+            'email' => 'required|string|email', 
             'password' => 'required|string',
         ]);
     
@@ -36,8 +36,7 @@ class AuthenticatedSessionController extends Controller
     
             return response()->json(['success' => true, 'message' => 'Login successful.']);
         }
-    
-        // If login fails, return an error response
+
         return response()->json(['success' => false, 'message' => 'The provided credentials do not match our records.'], 401);
     }
     
