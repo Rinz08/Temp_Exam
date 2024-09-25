@@ -24,36 +24,79 @@
                 <div class="flex justify-between items-center">
                     <h2 class="text-2xl font-bold">Product List</h2>
                     <!-- Create Product Button -->
-                    <button @click="createProduct" class="create-button">Create Product</button>
+                    <button @click="openCreateModal" class="create-button">Create Product</button>
                 </div>
 
-                <!-- Search bar -->
-                <div class="mt-4">
-                    <input v-model="searchKeyword" @input="searchProducts" class="search-input"
-                        placeholder="Search by name or description" />
-                </div>
-
-                <!-- Product list with pagination -->
-                <div class="content">
-                    <div class="product-list">
-                        <div v-if="loading" class="loading">Loading products...</div>
-                        <div v-else>
-                            <div v-for="product in products.data" :key="product.id" class="product-item">
-                                <div class="product-info">
-                                    <h3>{{ product.name }}</h3>
-                                    <p>{{ product.description }}</p>
-                                </div>
+                <!-- Product list with pagination intact -->
+                <div class="product-list mt-4">
+                    <div v-if="loading" class="loading">Loading products...</div>
+                    <div v-else>
+                        <div v-for="product in products.data" :key="product.id" class="product-item">
+                            <div class="product-info">
+                                <h3>{{ product.name }}</h3>
+                                <p>{{ product.description }}</p>
+                            </div>
+                            <div>
+                                <button @click="editProduct(product.id)" class="edit-button">Edit</button>
                                 <button @click="deleteProduct(product.id)" class="delete-button">Delete</button>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Pagination controls -->
-                    <div class="pagination-controls" v-if="products.data && products.data.length">
-                        <button @click="fetchProducts(products.prev_page_url)" :disabled="!products.prev_page_url"
-                            class="pagination-button">Previous</button>
-                        <button @click="fetchProducts(products.next_page_url)" :disabled="!products.next_page_url"
-                            class="pagination-button">Next</button>
+                <!-- Pagination controls -->
+                <div class="pagination-controls" v-if="products.data && products.data.length">
+                    <button @click="fetchProducts(products.prev_page_url)" :disabled="!products.prev_page_url"
+                        class="pagination-button">Previous</button>
+                    <button @click="fetchProducts(products.next_page_url)" :disabled="!products.next_page_url"
+                        class="pagination-button">Next</button>
+                </div>
+
+                <!-- Create/Edit Product Modal -->
+                <div v-if="showCreateModal || showEditModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close" @click="closeModal">&times;</span>
+
+                        <!-- Step 1: Basic Information -->
+                        <div v-if="currentStep === 1">
+                            <h2>{{ isEdit ? 'Edit Product' : 'Create Product' }}</h2>
+                            <form @submit.prevent="isEdit ? validateEditStep1 : validateStep1">
+                                <div>
+                                    <label for="name">Name</label>
+                                    <input v-model="formData.name" type="text" id="name" required />
+                                </div>
+                                <div>
+                                    <label for="category">Category</label>
+                                    <select v-model="formData.category" id="category" required>
+                                        <option value="" disabled>Select Category</option>
+                                        <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="description">Description</label>
+                                    <textarea v-model="formData.description" id="description" required></textarea>
+                                </div>
+                                <button type="submit">Next</button>
+                            </form>
+                        </div>
+
+                        <!-- Step 2: Image Upload -->
+                        <div v-if="currentStep === 2">
+                            <h2>Step 2: Upload Images</h2>
+                            <form @submit.prevent="isEdit ? validateEditStep2 : validateStep2">
+                                <input type="file" @change="handleImageUpload" multiple accept="image/*" />
+                                <p>Selected images: {{ formData.images.length }}</p>
+                                <button type="submit">Next</button>
+                            </form>
+                        </div>
+
+                        <!-- Step 3: Set Date -->
+                        <div v-if="currentStep === 3">
+                            <h2>Step 3: Set Date</h2>
+                            <input type="datetime-local" v-model="formData.date" required />
+                            <button @click="setToday">Today</button>
+                            <button @click="isEdit ? updateProduct : submitProduct">{{ isEdit ? 'Update' : 'Submit' }}</button>
+                        </div>
                     </div>
                 </div>
             </main>
@@ -67,30 +110,153 @@
 export default {
     data() {
         return {
-            products: [],
-            searchKeyword: '',
+            showCreateModal: false,
+            showEditModal: false,
+            isEdit: false, // To differentiate between edit and create mode
+            currentStep: 1,
+            categories: ['Category 1', 'Category 2', 'Category 3'], // Example categories
+            formData: {
+                id: null, // Holds the product id during edit
+                name: '',
+                category: '',
+                description: '',
+                images: [],
+                date: '',
+            },
+            errors: [],
             loading: false,
+            products: [], // Data for the product list
         };
     },
     methods: {
+        openCreateModal() {
+            this.isEdit = false; // Set to create mode
+            this.showCreateModal = true;
+        },
+        async editProduct(productId) {
+            this.isEdit = true;
+            try {
+                // Fetch the product data for editing
+                const response = await fetch(`/api/products/${productId}`);
+                const product = await response.json();
+                
+                // Pre-fill the form with the fetched product data
+                this.formData.id = product.id;
+                this.formData.name = product.name;
+                this.formData.category = product.category;
+                this.formData.description = product.description;
+                this.formData.date = product.date; // Assuming the date field exists
+                
+                this.showEditModal = true;
+            } catch (error) {
+                console.error('Error fetching product data:', error);
+            }
+        },
+        closeModal() {
+            this.showCreateModal = false;
+            this.showEditModal = false;
+            this.resetForm();
+        },
+        resetForm() {
+            this.currentStep = 1;
+            this.formData = {
+                id: null,
+                name: '',
+                category: '',
+                description: '',
+                images: [],
+                date: '',
+            };
+        },
+        validateStep1() {
+            if (this.formData.name && this.formData.category && this.formData.description) {
+                this.currentStep = 2;
+            } else {
+                alert('Please fill all fields.');
+            }
+        },
+        validateEditStep1() {
+            this.validateStep1();
+        },
+        handleImageUpload(event) {
+            const files = event.target.files;
+            if (files.length > 4) {
+                alert('You can upload a maximum of 4 images.');
+                return;
+            }
+            this.formData.images = [...files];
+        },
+        validateStep2() {
+            if (this.formData.images.length < 1 || this.formData.images.length > 4) {
+                alert('You must upload between 1 and 4 images.');
+            } else {
+                this.currentStep = 3;
+            }
+        },
+        validateEditStep2() {
+            this.validateStep2();
+        },
+        setToday() {
+            const now = new Date().toISOString().slice(0, 16); // Format for datetime-local input
+            this.formData.date = now;
+        },
+        async submitProduct() {
+            if (!this.formData.date) {
+                alert('Please set a valid date.');
+                return;
+            }
+            // Simulating API call to save the product
+            await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
+            alert('Product created successfully!');
+
+            // Close the modal
+            this.closeModal();
+
+            // Refresh the product list after submission
+            this.fetchProducts();
+        },
+        async updateProduct() {
+            if (!this.formData.date) {
+                alert('Please set a valid date.');
+                return;
+            }
+            try {
+                // Submit the updated product data to the backend
+                const response = await fetch(`/api/products/${this.formData.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: this.formData.name,
+                        category: this.formData.category,
+                        description: this.formData.description,
+                        date: this.formData.date,
+                    }),
+                });
+                
+                if (response.ok) {
+                    alert('Product updated successfully!');
+                    this.closeModal();
+                    this.fetchProducts(); // Refresh product list
+                } else {
+                    alert('Failed to update product.');
+                }
+            } catch (error) {
+                console.error('Error updating product:', error);
+            }
+        },
         async fetchProducts(url = '/api/products') {
             this.loading = true;
-            const response = await fetch(`${url}?search=${this.searchKeyword}`);
+            const response = await fetch(`${url}`);
             this.products = await response.json();
             this.loading = false;
-        },
-        searchProducts() {
-            this.fetchProducts();
         },
         async deleteProduct(productId) {
             if (confirm('Are you sure you want to delete this product?')) {
                 await fetch(`/api/products/${productId}`, { method: 'DELETE' });
                 this.fetchProducts(); // Refresh product list after deletion
             }
-        },
-        createProduct() {
-            // Handle the create product action, for example:
-            alert("Redirecting to create product form...");
         }
     },
     mounted() {
@@ -100,13 +266,6 @@ export default {
 </script>
 
 <style scoped>
-/* You can add additional styles here */
-
-.category-list li.active,
-.category-list li:hover {
-    background-color: #1abc9c;
-}
-
 /* Create Product button styling */
 .create-button {
     background-color: #3498db;
@@ -120,6 +279,20 @@ export default {
 
 .create-button:hover {
     background-color: #2980b9;
+}
+
+/* Edit button styling */
+.edit-button {
+    background-color: #f39c12;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.edit-button:hover {
+    background-color: #e67e22;
 }
 
 /* Product list styling */
@@ -174,6 +347,39 @@ export default {
 .pagination-button:disabled {
     background-color: #bdc3c7;
     cursor: not-allowed;
+}
+
+/* Modal Styling */
+.modal {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    width: 50%;
+    border-radius: 8px;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
 }
 
 /* Loader */

@@ -50,4 +50,39 @@ class ProductController extends Controller
 
         return response()->json(['message' => 'Product not found'], 404);
     }
+
+    public function edit($id)
+{
+    $product = Product::findOrFail($id);
+    return response()->json($product);
+}
+
+public function update(Request $request, $id)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'category' => 'required|string|max:255',
+        'description' => 'required|string',
+        'date' => 'required|date',
+    ]);
+
+    $product = Product::findOrFail($id);
+    $product->name = $request->name;
+    $product->category = $request->category;
+    $product->description = $request->description;
+    $product->date = $request->date;
+
+    if ($request->hasFile('images')) {
+        $images = [];
+        foreach ($request->file('images') as $image) {
+            $filename = $image->store('images', 'public');
+            $images[] = $filename;
+        }
+        $product->image_name = json_encode($images);
+    }
+
+    $product->save();
+
+    return response()->json(['message' => 'Product updated successfully']);
+}
 }
