@@ -31,5 +31,5 @@ git clone https://github.com/your-repo-url/admin-dashboard.git
 >visit http://127.0.0.1:8000
 
 Note: The default credentials should be
-admin@example.com / adminuser
+admin@example.com / adminuser (Username input not yet configured properly)
 password123
