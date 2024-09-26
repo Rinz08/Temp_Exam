@@ -66,50 +66,44 @@
                         <span class="close" @click="closeModal">&times;</span>
 
                         <!-- Step 1: Basic Information -->
-                        <div v-if="currentStep === 1" class="modal-form-section">
+                        <div v-if="currentStep === 1">
                             <h2>{{ isEdit ? 'Edit Product' : 'Create Product' }}</h2>
                             <form @submit.prevent="validateStep1">
-                                <div class="form-group">
+                                <div>
                                     <label for="name">Name</label>
-                                    <input v-model="formData.name" type="text" id="name" required class="form-input"/>
+                                    <input v-model="formData.name" type="text" id="name" required />
                                 </div>
-                                <div class="form-group">
+                                <div>
                                     <label for="category">Category</label>
-                                    <select v-model="formData.category" id="category" required class="form-input">
+                                    <select v-model="formData.category" id="category" required>
                                         <option value="" disabled>Select Category</option>
                                         <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
                                     </select>
                                 </div>
-                                <div class="form-group">
+                                <div>
                                     <label for="description">Description</label>
-                                    <textarea v-model="formData.description" id="description" required class="form-textarea"></textarea>
+                                    <textarea v-model="formData.description" id="description" required></textarea>
                                 </div>
-                                <div class="modal-actions">
-                                    <button type="submit" class="next-button">Next</button>
-                                </div>
+                                <button type="submit">Next</button>
                             </form>
                         </div>
 
                         <!-- Step 2: Image Upload -->
-                        <div v-if="currentStep === 2" class="modal-form-section">
+                        <div v-if="currentStep === 2">
                             <h2>Step 2: Upload Images</h2>
                             <form @submit.prevent="validateStep2">
-                                <input type="file" @change="handleImageUpload" multiple accept="image/*" class="file-input" />
+                                <input type="file" @change="handleImageUpload" multiple accept="image/*" />
                                 <p>Selected images: {{ formData.images.length }}</p>
-                                <div class="modal-actions">
-                                    <button type="submit" class="next-button">Next</button>
-                                </div>
+                                <button type="submit">Next</button>
                             </form>
                         </div>
 
                         <!-- Step 3: Set Date -->
-                        <div v-if="currentStep === 3" class="modal-form-section">
+                        <div v-if="currentStep === 3">
                             <h2>Step 3: Set Date</h2>
-                            <input type="datetime-local" v-model="formData.date_time" required class="form-input"/>
-                            <div class="modal-actions">
-                                <button @click="setToday" class="today-button">Today</button>
-                                <button @click="submitProduct" class="submit-button">{{ isEdit ? 'Update' : 'Submit' }}</button>
-                            </div>
+                            <input type="datetime-local" v-model="formData.date_time" required />
+                            <button @click="setToday">Today</button>
+                            <button @click="submitProduct">{{ isEdit ? 'Update' : 'Submit' }}</button>
                         </div>
                     </div>
                 </div>
@@ -126,40 +120,38 @@ export default {
         return {
             showCreateModal: false,
             showEditModal: false,
-            isEdit: false, // To differentiate between edit and create mode
+            isEdit: false, 
             currentStep: 1,
-            categories: ['Category 1', 'Category 2', 'Category 3'], // Example categories
+            categories: ['Category 1', 'Category 2', 'Category 3'], 
             formData: {
-                id: null, // Holds the product id during edit
+                id: null, 
                 name: '',
                 category: '',
                 description: '',
                 images: [],
-                date_time: '', // Changed from `date` to `date_time`
+                date_time: '', 
             },
             errors: [],
             loading: false,
-            products: [], // Data for the product list
+            products: [], 
         };
     },
     methods: {
         openCreateModal() {
-            this.isEdit = false; // Set to create mode
+            this.isEdit = false;
             this.showCreateModal = true;
         },
         async editProduct(productId) {
             this.isEdit = true;
             try {
-                // Fetch the product data for editing
                 const response = await fetch(`/api/products/${productId}`);
                 const product = await response.json();
                 
-                // Pre-fill the form with the fetched product data
                 this.formData.id = product.id;
                 this.formData.name = product.name;
                 this.formData.category = product.category;
                 this.formData.description = product.description;
-                this.formData.date_time = product.date_time; // Changed from `date` to `date_time`
+                this.formData.date_time = product.date_time; 
                 
                 this.showEditModal = true;
             } catch (error) {
@@ -179,7 +171,7 @@ export default {
                 category: '',
                 description: '',
                 images: [],
-                date_time: '', // Changed from `date` to `date_time`
+                date_time: '', 
             };
         },
         validateStep1() {
@@ -207,12 +199,12 @@ export default {
             this.formData.images = [...files];
         },
         setToday() {
-            const now = new Date().toISOString().slice(0, 16); // Format for datetime-local input
-            this.formData.date_time = now; // Changed from `date` to `date_time`
+            const now = new Date().toISOString().slice(0, 16); 
+            this.formData.date_time = now; 
         },
         async submitProduct() {
             // Submit or Update the product
-            if (!this.formData.date_time) { // Changed from `date` to `date_time`
+            if (!this.formData.date_time) { 
                 alert('Please set a valid date.');
                 return;
             }
@@ -229,13 +221,13 @@ export default {
                             name: this.formData.name,
                             category: this.formData.category,
                             description: this.formData.description,
-                            date_time: this.formData.date_time, // Changed from `date` to `date_time`
+                            date_time: this.formData.date_time, 
                         }),
                     });
                     if (response.ok) {
                         alert('Product updated successfully!');
                         this.closeModal();
-                        this.fetchProducts(); // Refresh product list
+                        this.fetchProducts(); 
                     } else {
                         alert('Failed to update product.');
                     }
@@ -254,13 +246,13 @@ export default {
                             name: this.formData.name,
                             category: this.formData.category,
                             description: this.formData.description,
-                            date_time: this.formData.date_time, // Changed from `date` to `date_time`
+                            date_time: this.formData.date_time, 
                         }),
                     });
                     if (response.ok) {
                         alert('Product created successfully!');
                         this.closeModal();
-                        this.fetchProducts(); // Refresh product list
+                        this.fetchProducts(); 
                     } else {
                         alert('Failed to create product.');
                     }
@@ -278,18 +270,18 @@ export default {
         async deleteProduct(productId) {
             if (confirm('Are you sure you want to delete this product?')) {
                 await fetch(`/api/products/${productId}`, { method: 'DELETE' });
-                this.fetchProducts(); // Refresh product list after deletion
+                this.fetchProducts(); 
             }
         },
         // Logout functionality
         logout() {
             // Clear any session data if needed
             // Redirect to login page
-            this.$router.push('/login'); // Assuming you have a Vue Router setup and /login is the route for the login page
+            this.$router.push('/'); 
         }
     },
     mounted() {
-        this.fetchProducts(); // Fetch initial products when the component is mounted
+        this.fetchProducts(); 
     }
 };
 </script>
@@ -396,73 +388,24 @@ export default {
 
 .modal-content {
     background-color: white;
-    margin: 10% auto;
+    margin: 15% auto;
     padding: 20px;
-    width: 40%;
+    width: 50%;
     border-radius: 8px;
-    position: relative;
 }
 
-/* Modal close button */
 .close {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 20px;
     color: #aaa;
-    cursor: pointer;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
 }
 
-.close:hover {
+.close:hover,
+.close:focus {
     color: black;
-}
-
-/* Form input styling */
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-input,
-.form-textarea {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-}
-
-.form-textarea {
-    height: 100px;
-}
-
-.file-input {
-    padding: 8px;
-    font-size: 16px;
-}
-
-/* Modal actions: buttons for navigation and submission */
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 20px;
-}
-
-.next-button,
-.submit-button,
-.today-button {
-    background-color: #3498db;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
+    text-decoration: none;
     cursor: pointer;
-    margin-left: 10px;
-}
-
-.next-button:hover,
-.submit-button:hover,
-.today-button:hover {
-    background-color: #2980b9;
 }
 
 /* Logout button styling */
